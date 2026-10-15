@@ -2,7 +2,7 @@ name: Xodim kerak tekshiruvi
 
 on:
   schedule:
-    - cron: "*/5 * * * *" # har 5 daqiqada (GitHub ba'zan kechiktiradi)
+    - cron: "*/5 * * * *" # har 5 daqiqada (GitHub ba'zan 5-15 daqiqa kechiktiradi)
     - cron: "17 6 * * 1" # har dushanba: workflow o'chib qolmasligi uchun (keepalive)
   push:
     branches: [main]
