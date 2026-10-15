@@ -67,7 +67,10 @@ Oddiy bot begona kanalni o'qiy olmaydi, shuning uchun ikki qism bor:
 Eslatmalar:
 
 - GitHub va kompyuterdagi `main.py` bir vaqtda ishlasa, e'lonlar ikki marta keladi. Server olganda workflow'ni o'chiring (Actions → workflow → **Disable workflow**).
-- Repoda 60 kun hech qanday o'zgarish bo'lmasa, GitHub jadvalni to'xtatadi va email yuboradi. Unda Actions sahifasida qayta yoqing.
+- Bot ishlamay qolsa (masalan, Telegram sessiyasi bekor qilinsa), bot sizga "⚠️ ishlamay qoldi" deb yozadi (6 soatda ko'pi bilan bir marta), tiklanganda "✅ Bot yana ishlayapti" deydi.
+- GitHub 60 kun faolsiz repodagi jadvalni o'chiradi; `keepalive` job har dushanba uni qayta yoqib turadi.
+- `check.py`, `main.py`, `requirements.txt` yoki workflow o'zgarib GitHub'ga yuklansa, tekshiruv darhol ishga tushadi.
+- Telefoningizdagi Telegram → Settings → Devices ro'yxatidan GitHub sessiyasini o'chirmang (Terminate qilmang).
 
 ## Sozlamalar (`.env`)
 

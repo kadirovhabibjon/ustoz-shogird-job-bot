@@ -3,6 +3,14 @@ name: Xodim kerak tekshiruvi
 on:
   schedule:
     - cron: "*/5 * * * *" # har 5 daqiqada (GitHub ba'zan kechiktiradi)
+    - cron: "17 6 * * 1" # har dushanba: workflow o'chib qolmasligi uchun (keepalive)
+  push:
+    branches: [main]
+    paths:
+      - "check.py"
+      - "main.py"
+      - "requirements.txt"
+      - ".github/workflows/check.yml"
   workflow_dispatch:
     inputs:
       test:
@@ -14,6 +22,9 @@ on:
 concurrency:
   group: check
   cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   check:
@@ -44,6 +55,7 @@ jobs:
           API_HASH: ${{ secrets.API_HASH }}
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           TG_SESSION: ${{ secrets.TG_SESSION }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Holatni saqlash
         if: always() && hashFiles('state.json') != ''
@@ -51,3 +63,14 @@ jobs:
         with:
           path: state.json
           key: state-${{ github.run_id }}
+
+  # GitHub 60 kun faolsiz repodagi jadvalni o'chiradi; har hafta qayta yoqib turamiz
+  keepalive:
+    if: github.event.schedule == '17 6 * * 1'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/check.yml/enable"
+        env:
+          GH_TOKEN: ${{ github.token }}
