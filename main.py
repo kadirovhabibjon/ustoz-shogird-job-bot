@@ -19,6 +19,8 @@ from dotenv import load_dotenv
 from telethon import TelegramClient, events
 from telethon.errors import FloodWaitError
 
+import matcher
+
 load_dotenv()
 
 API_ID = int(os.environ["API_ID"])
@@ -53,6 +55,13 @@ def is_job_post(text: str) -> bool:
     return any(k in first_line for k in KEYWORDS)
 
 
+def is_wanted(text: str) -> tuple[bool, str]:
+    """"Xodim kerak" e'loni va profile.json ga mos bo'lsa True."""
+    if not is_job_post(text):
+        return False, "xodim kerak emas"
+    return matcher.match(text)
+
+
 def post_link(chat, msg_id: int) -> str:
     username = getattr(chat, "username", None)
     if username:
@@ -84,6 +93,10 @@ async def main() -> None:
     async def on_channel_post(event):
         text = event.raw_text or ""
         if not is_job_post(text):
+            return
+        ok, reason = matcher.match(text)
+        if not ok:
+            log.info("O'tkazib yuborildi (%s): %s", reason, post_link(event.chat, event.id))
             return
 
         log.info("Yangi 'Xodim kerak' e'loni: %s", post_link(event.chat, event.id))
@@ -126,7 +139,7 @@ async def main() -> None:
     if "--test" in sys.argv:
         # Sinov: kanaldagi eng oxirgi "Xodim kerak" postini darhol yuboradi
         async for msg in user.iter_messages(channel, limit=100):
-            if is_job_post(msg.raw_text or ""):
+            if is_wanted(msg.raw_text or "")[0]:
                 await copy_post(msg)
                 log.info("Sinov posti yuborildi: %s", post_link(channel, msg.id))
                 break

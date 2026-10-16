@@ -7,7 +7,7 @@ state.json ga yozadi. Doimiy ishlaydigan versiya: main.py.
 
   python check.py          # yangi postlarni bir marta tekshirish
   python check.py --loop   # LOOP_SECONDS davomida har POLL_INTERVAL soniyada tekshirish
-  python check.py --test   # oxirgi "Xodim kerak" postini darhol yuborish
+  python check.py --test   # sizga mos oxirgi "Xodim kerak" postini darhol yuborish
 """
 
 import asyncio
@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 
-from main import CHANNEL, MAX_CAPTION_LEN, MAX_MESSAGE_LEN, is_job_post
+from main import CHANNEL, MAX_CAPTION_LEN, MAX_MESSAGE_LEN, is_job_post, is_wanted
 
 load_dotenv()
 
@@ -99,9 +99,13 @@ async def poll(user: TelegramClient, channel, owner_id: int, state: dict) -> Non
 
     sent = 0
     async for msg in user.iter_messages(channel, min_id=state["last_id"], reverse=True):
-        if is_job_post(msg.raw_text or ""):
-            await copy_post(user, owner_id, msg)
-            sent += 1
+        text = msg.raw_text or ""
+        if is_job_post(text):
+            ok, reason = is_wanted(text)
+            print(f"{msg.id}: {'YUBORILDI' if ok else 'o`tkazildi'} ({reason})")
+            if ok:
+                await copy_post(user, owner_id, msg)
+                sent += 1
         # Har bir postdan keyin saqlaymiz: xato bo'lsa, keyingi safar shu joydan davom etadi
         state["last_id"] = msg.id
         save_state(state)
@@ -117,13 +121,13 @@ async def run(state: dict) -> None:
         channel = await user.get_entity(CHANNEL)
 
         if "--test" in sys.argv:
-            async for msg in user.iter_messages(channel, limit=100):
-                if is_job_post(msg.raw_text or ""):
+            async for msg in user.iter_messages(channel, limit=300):
+                if is_wanted(msg.raw_text or "")[0]:
                     await copy_post(user, owner_id, msg)
                     print(f"Sinov posti yuborildi: {msg.id}")
                     break
             else:
-                print("Oxirgi 100 ta postda 'Xodim kerak' topilmadi.")
+                print("Oxirgi 300 ta postda sizga mos 'Xodim kerak' topilmadi.")
 
         if "--loop" not in sys.argv:
             await poll(user, channel, owner_id, state)

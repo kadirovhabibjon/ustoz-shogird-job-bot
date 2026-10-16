@@ -1,6 +1,6 @@
 # ustoz-shogird-job-bot
 
-[Ustoz-Shogird](https://t.me/UstozShogird) kanalida **"Xodim kerak"** e'loni chiqishi bilan uni Telegram bot orqali **faqat sizga** yuboradi.
+[Ustoz-Shogird](https://t.me/UstozShogird) kanalida chiqqan **"Xodim kerak"** e'lonlaridan **sizning bilimingiz, hududingiz va maoshingizga mos** kelganlarini Telegram bot orqali **faqat sizga** yuboradi.
 
 ## Qanday ishlaydi
 
@@ -38,6 +38,19 @@ Oddiy bot begona kanalni o'qiy olmaydi, shuning uchun ikki qism bor:
    ```
 
 7. Telegramda botingizni oching va bir marta `/start` bosing (Telegram qoidasiga ko'ra bot sizga birinchi bo'lib yoza olmaydi).
+
+## Profil: faqat sizga mos e'lonlar
+
+Bot "Xodim kerak" e'lonini [profile.json](profile.json) bilan solishtiradi ([matcher.py](matcher.py)) va faqat mos kelganini yuboradi:
+
+| Shart | Qoida |
+|-------|-------|
+| Bilim | `skills` dan kamida bittasi yoki `weak_skills` dan kamida `min_weak_skills` tasi e'londa bo'lishi kerak |
+| Hudud | `Hudud:` maydonida `locations` dan biri bo'lishi yoki e'londa `remote_words` dan biri bo'lishi kerak. Maydon yo'q bo'lsa, rad etilmaydi |
+| Maosh | `Maosh:` dagi oraliq `salary_usd` bilan kesishishi kerak. So'm `usd_rate` bo'yicha dollarga aylantiriladi. "Kelishiladi" kabi tushunarsiz maosh rad etilmaydi |
+| Istisno | `exclude_words` dagi so'z bo'lsa, rad etiladi |
+
+`skills`, `weak_skills` dagi har bir bilim uchun e'londa qidiriladigan so'zlar ro'yxati beriladi (masalan `"PostgreSQL": ["postgresql", "postgres"]`). `profile.json` o'zgartirilib GitHub'ga yuklansa, bot yangi profil bilan darhol qayta ishga tushadi. Nega o'tkazib yuborilgani GitHub Actions logida ko'rinadi (`o'tkazildi (hudud: samarqand)`).
 
 ## GitHub Actions'da ishlatish (server bo'lmaganda)
 

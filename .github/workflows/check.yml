@@ -11,19 +11,22 @@ on:
     paths:
       - "check.py"
       - "main.py"
+      - "matcher.py"
+      - "profile.json"
       - "requirements.txt"
       - ".github/workflows/check.yml"
   workflow_dispatch:
     inputs:
       test:
-        description: "Oxirgi 'Xodim kerak' postini darhol yuborish"
+        description: "Sizga mos oxirgi 'Xodim kerak' postini darhol yuborish"
         type: boolean
         default: false
 
-# Bir vaqtda faqat bitta zanjir ishlaydi; yangi ishga tushirish navbatda kutadi
+# Bir vaqtda faqat bitta zanjir ishlaydi; yangi ishga tushirish navbatda kutadi.
+# Yangi kod yuklanganda (push) eskisi to'xtatilib, yangi kod darhol ishga tushadi.
 concurrency:
   group: check
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 permissions:
   contents: read
