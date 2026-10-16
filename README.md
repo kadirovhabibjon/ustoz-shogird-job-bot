@@ -41,7 +41,9 @@ Oddiy bot begona kanalni o'qiy olmaydi, shuning uchun ikki qism bor:
 
 ## GitHub Actions'da ishlatish (server bo'lmaganda)
 
-`check.py` har 5 daqiqada GitHub Actions'da ishga tushadi ([.github/workflows/check.yml](.github/workflows/check.yml)), oxirgi tekshiruvdan beri chiqqan "Xodim kerak" postlarini yuboradi va o'chadi. E'lonlar 5–15 daqiqa kechikib keladi (GitHub jadvalni ba'zan kechiktiradi). Server olingandan keyin `main.py` ishlatiladi va e'lonlar darhol keladi.
+Workflow ([.github/workflows/check.yml](.github/workflows/check.yml)) zanjir bo'lib ishlaydi: har bir ishga tushirish `check.py --loop` bilan ~5,5 soat davomida kanalni har daqiqada tekshiradi, tugagach keyingi ishga tushirishni o'zi boshlaydi. E'lonlar ~1 daqiqa ichida keladi. Soatlik `schedule` faqat zaxira: zanjir uzilsa, uni qayta tiklaydi.
+
+> Diqqat: bu GitHub Actions'ni doimiy server sifatida ishlatish bo'lib, GitHub qoidalariga zid. GitHub akkauntga cheklov qo'yishi mumkin. Bu vaqtinchalik yechim; server olinganda `main.py` ga o'ting.
 
 1. GitHub uchun alohida sessiya oling (QR kod orqali):
 
@@ -66,9 +68,9 @@ Oddiy bot begona kanalni o'qiy olmaydi, shuning uchun ikki qism bor:
 
 Eslatmalar:
 
-- GitHub va kompyuterdagi `main.py` bir vaqtda ishlasa, e'lonlar ikki marta keladi. Server olganda workflow'ni o'chiring (Actions → workflow → **Disable workflow**).
+- GitHub va kompyuterdagi `main.py` bir vaqtda ishlasa, e'lonlar ikki marta keladi.
+- **To'xtatish:** Actions → *Xodim kerak tekshiruvi* → **Disable workflow**, so'ng ishlab turgan ishga tushirishni **Cancel** qiling.
 - Bot ishlamay qolsa (masalan, Telegram sessiyasi bekor qilinsa), bot sizga "⚠️ ishlamay qoldi" deb yozadi (6 soatda ko'pi bilan bir marta), tiklanganda "✅ Bot yana ishlayapti" deydi.
-- GitHub 60 kun faolsiz repodagi jadvalni o'chiradi; `keepalive` job har dushanba uni qayta yoqib turadi.
 - `check.py`, `main.py`, `requirements.txt` yoki workflow o'zgarib GitHub'ga yuklansa, tekshiruv darhol ishga tushadi.
 - Telefoningizdagi Telegram → Settings → Devices ro'yxatidan GitHub sessiyasini o'chirmang (Terminate qilmang).
 

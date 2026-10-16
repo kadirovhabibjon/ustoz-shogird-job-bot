@@ -5,7 +5,8 @@ Oxirgi tekshiruvdan beri kanalda chiqqan "Xodim kerak" postlarini topadi,
 ularni Bot API orqali egasiga yuboradi va oxirgi ko'rilgan post ID sini
 state.json ga yozadi. Doimiy ishlaydigan versiya: main.py.
 
-  python check.py          # yangi postlarni tekshirish
+  python check.py          # yangi postlarni bir marta tekshirish
+  python check.py --loop   # LOOP_SECONDS davomida har POLL_INTERVAL soniyada tekshirish
   python check.py --test   # oxirgi "Xodim kerak" postini darhol yuborish
 """
 
@@ -33,6 +34,8 @@ TG_SESSION = os.environ["TG_SESSION"]
 STATE_FILE = Path(os.getenv("STATE_FILE", "state.json"))
 BOT_API = f"https://api.telegram.org/bot{BOT_TOKEN}"
 ERROR_NOTICE_INTERVAL = 6 * 60 * 60  # xato haqida 6 soatda ko'pi bilan bir marta xabar
+POLL_INTERVAL = int(os.getenv("POLL_INTERVAL", "60"))
+LOOP_SECONDS = int(os.getenv("LOOP_SECONDS", str(5 * 60 * 60 + 30 * 60)))
 
 
 def load_state() -> dict:
@@ -85,7 +88,28 @@ async def send_post(user: TelegramClient, chat_id: int, msg, html: str, parse_mo
     )
 
 
-async def check(state: dict) -> None:
+async def poll(user: TelegramClient, channel, owner_id: int, state: dict) -> None:
+    if "last_id" not in state:
+        # Birinchi ishga tushish: eski postlarni yubormaymiz, faqat joyni belgilaymiz
+        latest = await user.get_messages(channel, limit=1)
+        state["last_id"] = latest[0].id if latest else 0
+        save_state(state)
+        print("Birinchi ishga tushish: boshlang'ich nuqta saqlandi.")
+        return
+
+    sent = 0
+    async for msg in user.iter_messages(channel, min_id=state["last_id"], reverse=True):
+        if is_job_post(msg.raw_text or ""):
+            await copy_post(user, owner_id, msg)
+            sent += 1
+        # Har bir postdan keyin saqlaymiz: xato bo'lsa, keyingi safar shu joydan davom etadi
+        state["last_id"] = msg.id
+        save_state(state)
+    if sent:
+        print(f"Yuborilgan 'Xodim kerak' postlari: {sent}")
+
+
+async def run(state: dict) -> None:
     async with TelegramClient(StringSession(TG_SESSION), API_ID, API_HASH) as user:
         user.parse_mode = "html"
         owner_id = (await user.get_me()).id
@@ -97,39 +121,46 @@ async def check(state: dict) -> None:
                 if is_job_post(msg.raw_text or ""):
                     await copy_post(user, owner_id, msg)
                     print(f"Sinov posti yuborildi: {msg.id}")
-                    return
-            print("Oxirgi 100 ta postda 'Xodim kerak' topilmadi.")
+                    break
+            else:
+                print("Oxirgi 100 ta postda 'Xodim kerak' topilmadi.")
+
+        if "--loop" not in sys.argv:
+            await poll(user, channel, owner_id, state)
+            mark_ok(state)
             return
 
-        if "last_id" not in state:
-            # Birinchi ishga tushish: eski postlarni yubormaymiz, faqat joyni belgilaymiz
-            latest = await user.get_messages(channel, limit=1)
-            state["last_id"] = latest[0].id if latest else 0
-            save_state(state)
-            print("Birinchi ishga tushish: boshlang'ich nuqta saqlandi.")
-            return
-
-        sent = 0
-        async for msg in user.iter_messages(channel, min_id=state["last_id"], reverse=True):
-            if is_job_post(msg.raw_text or ""):
-                await copy_post(user, owner_id, msg)
-                sent += 1
-            # Har bir postdan keyin saqlaymiz: xato bo'lsa, keyingi safar shu joydan davom etadi
-            state["last_id"] = msg.id
-            save_state(state)
-        print(f"Tekshirildi. Yuborilgan 'Xodim kerak' postlari: {sent}")
+        deadline = time.monotonic() + LOOP_SECONDS
+        print(f"Kanal har {POLL_INTERVAL} soniyada tekshiriladi ({LOOP_SECONDS // 60} daqiqa).")
+        while True:
+            try:
+                await poll(user, channel, owner_id, state)
+                mark_ok(state)
+            except Exception as e:
+                # Vaqtinchalik xato butun ishga tushirishni to'xtatmasin
+                print(f"Tekshiruv xatosi: {type(e).__name__}: {e}")
+                notify_error(state, e)
+            if time.monotonic() + POLL_INTERVAL > deadline:
+                break
+            await asyncio.sleep(POLL_INTERVAL)
+        print("Vaqt tugadi, keyingi ishga tushirishga topshirilmoqda.")
 
 
 async def main() -> None:
     state = load_state()
     try:
-        await check(state)
+        await run(state)
     except Exception as e:
         notify_error(state, e)
         raise
+    finally:
+        save_state(state)
+
+
+def mark_ok(state: dict) -> None:
     if state.pop("error_notified_at", None):
         notify_owner(state, "✅ Bot yana ishlayapti.")
-    save_state(state)
+        save_state(state)
 
 
 def notify_owner(state: dict, text: str) -> None:
