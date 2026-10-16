@@ -17,6 +17,17 @@ PROFILE_FILE = Path(__file__).resolve().parent / "profile.json"
 
 LOCATION_FIELDS = ("hudud", "manzil", "joylashuv", "регион", "адрес")
 SALARY_FIELDS = ("maosh", "oylik", "ish haqi", "зарплата", "зп")
+# Bilim qidirilmaydigan qatorlar: kontakt, kompaniya nomi va h.k.
+# ("Telegram: @python_dev" dagi "python" bilim emas)
+SKIP_FIELDS = ("idora", "telegram", "aloqa", "mas'ul", "mas`ul", "masul", "murojaat",
+               "ish vaqti", "hudud", "maosh", "manzil", "компания", "контакт")
+LEVEL_WORDS = {
+    "intern": ("intern", "internship", "stajyor", "stajer", "стажер", "стажёр", "trainee"),
+    "junior": ("junior", "джуниор", "джун"),
+    "middle": ("middle", "мидл"),
+    "senior": ("senior", "сеньор"),
+    "lead": ("lead", "team lead", "teamlead", "tech lead", "тимлид"),
+}
 USD_WORDS = ("$", "usd", "dollar", "доллар", "у.е")
 UZS_WORDS = ("so'm", "so`m", "som", "сум", "uzs", "sum")
 
@@ -41,6 +52,19 @@ def _field(text: str, names: tuple) -> str | None:
         if ":" in low and any(n in low.split(":", 1)[0] for n in names):
             return low.split(":", 1)[1].strip()
     return None
+
+
+def content_text(text: str) -> str:
+    """Bilim qidiriladigan matn: kontakt qatorlari, heshteglar va kanal havolasisiz."""
+    lines = []
+    for line in text.splitlines():
+        low = line.lower()
+        head = low.split(":", 1)[0] if ":" in low else ""
+        if head and any(f in head for f in SKIP_FIELDS):
+            continue
+        low = re.sub(r"[#@]\w+", " ", low)  # #ishJoyi, @UstozShogird
+        lines.append(low)
+    return "\n".join(lines)
 
 
 def parse_salary_usd(value: str, usd_rate: float) -> tuple[float | None, float | None] | None:
@@ -89,10 +113,17 @@ def match(text: str, profile: dict | None = None) -> tuple[bool, str]:
         if _contains(low, word.lower()):
             return False, f"istisno so'z: {word}"
 
-    strong = _found(low, p["skills"])
-    weak = _found(low, p.get("weak_skills", {}))
+    content = content_text(text)
+    strong = _found(content, p["skills"])
+    weak = _found(content, p.get("weak_skills", {}))
     if not strong and len(weak) < p.get("min_weak_skills", 2):
         return False, f"bilim mos emas (yordamchi: {', '.join(weak) or '-'})"
+
+    # Daraja: e'londa daraja yozilgan bo'lsa, sizning darajangizdan biri bo'lishi kerak
+    wanted = set(p.get("levels", []))
+    mentioned = {lvl for lvl, words in LEVEL_WORDS.items() if any(_contains(content, w) for w in words)}
+    if wanted and mentioned and not mentioned & wanted:
+        return False, f"daraja: {', '.join(sorted(mentioned))}"
 
     location = _field(text, LOCATION_FIELDS)
     is_remote = any(_contains(low, w) for w in p["remote_words"])

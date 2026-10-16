@@ -17,7 +17,7 @@
     "RAG": ["rag"],
     "OCR": ["ocr", "document parsing"],
     "OpenAI / LLM": ["openai", "chatgpt", "gpt", "llm", "llms"],
-    "Self-hosted models": ["self-hosted", "ollama", "vllm"]
+    "Self-hosted models": ["self-hosted models", "self-hosted", "self hosted", "ollama", "vllm"]
   },
   "weak_skills": {
     "HTML": ["html", "html5"],
@@ -37,8 +37,10 @@
   "locations": ["toshkent", "tashkent", "ташкент", "тошкент"],
   "remote_words": ["remote", "masofaviy", "masofadan", "onlayn", "online", "udalyonka", "удаленно", "удалённо", "удаленка", "uydan"],
 
-  "salary_usd": { "min": 200, "max": 1000 },
+  "salary_usd": { "min": 200, "max": null },
   "usd_rate": 12500,
+
+  "levels": ["junior", "middle", "senior"],
 
   "exclude_words": []
 }

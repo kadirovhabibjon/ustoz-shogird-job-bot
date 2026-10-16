@@ -45,9 +45,10 @@ Bot "Xodim kerak" e'lonini [profile.json](profile.json) bilan solishtiradi ([mat
 
 | Shart | Qoida |
 |-------|-------|
-| Bilim | `skills` dan kamida bittasi yoki `weak_skills` dan kamida `min_weak_skills` tasi e'londa bo'lishi kerak |
+| Bilim | `skills` dan kamida bittasi yoki `weak_skills` dan kamida `min_weak_skills` tasi e'lon mazmunida bo'lishi kerak (Idora, Telegram, Aloqa kabi qatorlar va heshteglar hisobga olinmaydi) |
+| Daraja | E'londa daraja yozilgan bo'lsa, `levels` dan biri bo'lishi kerak (faqat "Intern" yoki faqat "Lead" bo'lsa rad etiladi). Yozilmagan bo'lsa, rad etilmaydi |
 | Hudud | `Hudud:` maydonida `locations` dan biri bo'lishi yoki e'londa `remote_words` dan biri bo'lishi kerak. Maydon yo'q bo'lsa, rad etilmaydi |
-| Maosh | `Maosh:` dagi oraliq `salary_usd` bilan kesishishi kerak. So'm `usd_rate` bo'yicha dollarga aylantiriladi. "Kelishiladi" kabi tushunarsiz maosh rad etilmaydi |
+| Maosh | `Maosh:` dagi oraliq `salary_usd` bilan kesishishi kerak (`max: null` = yuqori chegara yo'q). So'm `usd_rate` bo'yicha dollarga aylantiriladi. "Kelishiladi" kabi tushunarsiz maosh rad etilmaydi |
 | Istisno | `exclude_words` dagi so'z bo'lsa, rad etiladi |
 
 `skills`, `weak_skills` dagi har bir bilim uchun e'londa qidiriladigan so'zlar ro'yxati beriladi (masalan `"PostgreSQL": ["postgresql", "postgres"]`). `profile.json` o'zgartirilib GitHub'ga yuklansa, bot yangi profil bilan darhol qayta ishga tushadi. Nega o'tkazib yuborilgani GitHub Actions logida ko'rinadi (`o'tkazildi (hudud: samarqand)`).
